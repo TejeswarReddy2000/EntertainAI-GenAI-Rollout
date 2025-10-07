@@ -1,0 +1,100 @@
+
+
+# 1️⃣ Connect to SQLite database
+conn = sqlite3.connect('ecommerce.db')
+cursor = conn.cursor()
+
+# 2️⃣ Create tables
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    age INTEGER,
+    email TEXT,
+    region TEXT
+)
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS products (
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    category TEXT,
+    price REAL,
+    rating REAL
+)
+''')
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER,
+    product_id INTEGER,
+    quantity INTEGER,
+    order_date TEXT,
+    total_price REAL,
+    FOREIGN KEY(customer_id) REFERENCES customers(id),
+    FOREIGN KEY(product_id) REFERENCES products(id)
+)
+''')
+
+# 3️⃣ Generate sample data
+
+# Customers: 50 people
+regions = ['North', 'South', 'East', 'West']
+customers_data = []
+for i in range(1, 51):
+    name = f'Customer{i}'
+    age = random.randint(18, 60)
+    email = f'customer{i}@email.com'
+    region = random.choice(regions)
+    customers_data.append((i, name, age, email, region))
+cursor.executemany('INSERT INTO customers VALUES (?, ?, ?, ?, ?)', customers_data)
+
+# Products: 20 products
+products_data = [
+    (1, 'Laptop', 'Electronics', 800.0, 4.5),
+    (2, 'Headphones', 'Electronics', 50.0, 4.2),
+    (3, 'Coffee Maker', 'Home Appliances', 120.0, 4.0),
+    (4, 'Office Chair', 'Furniture', 200.0, 4.3),
+    (5, 'Sneakers', 'Footwear', 90.0, 4.6),
+    (6, 'Smartphone', 'Electronics', 600.0, 4.4),
+    (7, 'Backpack', 'Accessories', 40.0, 4.1),
+    (8, 'Watch', 'Accessories', 150.0, 4.2),
+    (9, 'Table Lamp', 'Home Appliances', 60.0, 4.0),
+    (10, 'Jeans', 'Clothing', 70.0, 4.3),
+    (11, 'T-Shirt', 'Clothing', 25.0, 4.1),
+    (12, 'Blender', 'Home Appliances', 80.0, 4.2),
+    (13, 'Gaming Console', 'Electronics', 400.0, 4.7),
+    (14, 'Microwave', 'Home Appliances', 150.0, 4.3),
+    (15, 'Sofa', 'Furniture', 500.0, 4.4),
+    (16, 'Sandals', 'Footwear', 45.0, 4.0),
+    (17, 'Jacket', 'Clothing', 120.0, 4.5),
+    (18, 'Camera', 'Electronics', 350.0, 4.6),
+    (19, 'Desk', 'Furniture', 220.0, 4.2),
+    (20, 'Headset', 'Electronics', 70.0, 4.3)
+]
+cursor.executemany('INSERT INTO products VALUES (?, ?, ?, ?, ?)', products_data)
+
+# Orders: Random 150 orders
+orders_data = []
+order_id = 1
+start_date = datetime(2025, 1, 1)
+for _ in range(150):
+    customer_id = random.randint(1, 50)
+    product_id = random.randint(1, 20)
+    quantity = random.randint(1, 3)
+    order_date = start_date + timedelta(days=random.randint(0, 60))
+    price = [p[3] for p in products_data if p[0] == product_id][0]
+    total_price = price * quantity
+    orders_data.append((order_id, customer_id, product_id, quantity, order_date.strftime('%Y-%m-%d'), total_price))
+    order_id += 1
+
+cursor.executemany('INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?)', orders_data)
+
+# 4️⃣ Commit changes and close connection
+conn.commit()
+conn.close()
+
+print("Database 'ecommerce.db' with 50 customers, 20 products, and 150 orders created successfully!")
